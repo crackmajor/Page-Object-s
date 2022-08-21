@@ -1,7 +1,11 @@
 package ru.netology.test;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import ru.netology.data.DataGenerator;
+import ru.netology.data.PageElements;
+import ru.netology.data.PageElements.LoginPage;
 
 import static com.codeborne.selenide.Configuration.browser;
 import static com.codeborne.selenide.Configuration.timeout;
@@ -13,54 +17,66 @@ class AuthTest {
 
     @BeforeEach
     void setup() {
+
         browser = "firefox";
         open("http://localhost:9999");
         timeout = 1000;
-        var x = DataGenerator.Registration.getUser();
-        DataGenerator.PageElements.loginUser(x);
 
     }
 
     @Test
     @DisplayName("Transfer from 1st card to 2nd of the total amount")
     void shouldSuccessfulTransfer() {
-        String card1 = "'92df3f1c-a033-48e6-8390-206f6b1f56c0'";
-        String card2 = "'0f3f5c2a-249e-4c3d-8287-09f7a039391d'";
 
-        DataGenerator.PageElements.transferToCard(card1, card2, 6000);
-        DataGenerator.PageElements.transferToCard(card2, card1, 6000);
+        var user = DataGenerator.Registration.getUser();
+        LoginPage loginPage = new PageElements().new LoginPage();
 
+        var dashboardPage =
+                loginPage.login(user)
+                        .verificationPage(user);
 
-        assertEquals(DataGenerator.PageElements.getCardBalance(card1), DataGenerator.PageElements.getCardBalance(card2));
+        var card1Balance = dashboardPage.getCardBalance(1);
+        var card2Balance = dashboardPage.getCardBalance(2);
+
+        dashboardPage.transferToCard(2, 1, card1Balance);
+
+        assertEquals(card2Balance + card1Balance, dashboardPage.getCardBalance(2));
     }
 
     @Test
-    @DisplayName("Transfer from 1st card to 2nd of the total amount, then balance sheet")
+    @DisplayName("Transfer from 1st card to 2nd of the total amount")
     void shouldSuccessfulTransfer2() {
-        String card1 = "'92df3f1c-a033-48e6-8390-206f6b1f56c0'";
-        String card2 = "'0f3f5c2a-249e-4c3d-8287-09f7a039391d'";
 
-        DataGenerator.PageElements.transferToCard(card1, card2, 6000);
-        DataGenerator.PageElements.transferToCard(card1, card2, 4000);
+        var user = DataGenerator.Registration.getUser();
+        LoginPage loginPage = new PageElements().new LoginPage();
+        var dashboardPage =
+                loginPage.login(user)
+                        .verificationPage(user);
 
-        assertEquals(20_000, DataGenerator.PageElements.getCardBalance(card1));
-        assertEquals(0, DataGenerator.PageElements.getCardBalance(card2));
+        var card1Balance = dashboardPage.getCardBalance(1);
+        var card2Balance = dashboardPage.getCardBalance(2);
 
-        DataGenerator.PageElements.transferToCard(card2, card1, 10_000);
+        dashboardPage.transferToCard(2, 1, card1Balance);
 
-        assertEquals(DataGenerator.PageElements.getCardBalance(card1), DataGenerator.PageElements.getCardBalance(card2));
+        assertEquals(dashboardPage.getCardBalance(2), card2Balance + card1Balance);
+
     }
 
     @Test
     @DisplayName("Transfer from the 1st card to the 2nd with an overdraft")
     void OverdraftTest() {
-        String card1 = "'92df3f1c-a033-48e6-8390-206f6b1f56c0'";
-        String card2 = "'0f3f5c2a-249e-4c3d-8287-09f7a039391d'";
 
-        DataGenerator.PageElements.transferToCard(card1, card2, 6000);
-        DataGenerator.PageElements.transferToCard(card1, card2, 4000);
-        DataGenerator.PageElements.transferToCard(card1, card2, 6000);
+        var user = DataGenerator.Registration.getUser();
+        LoginPage loginPage = new PageElements().new LoginPage();
+        var dashboardPage =
+                loginPage.login(user)
+                        .verificationPage(user);
 
-        assertEquals(20_000, DataGenerator.PageElements.getCardBalance(card1));
+        var card1Balance = dashboardPage.getCardBalance(1);
+        var card2Balance = dashboardPage.getCardBalance(2);
+
+        dashboardPage.transferToCard(1, 2, card2Balance + card2Balance);
+
+        assertEquals(card1Balance, dashboardPage.getCardBalance(1));
     }
 }
