@@ -16,7 +16,7 @@ class AuthTest {
 
     @BeforeEach
     void setup() {
-        browser = "firefox";
+        browser = "chrome";
         open("http://localhost:9999");
         timeout = 1000;
     }
@@ -28,17 +28,20 @@ class AuthTest {
         var code = DataGenerator.VerificationCode.getVerificationCode();
         LoginPage loginPage = new LoginPage();
 
-        var dashboardPage =
+        var cardBalancePage =
                 loginPage.login(user)
                         .verificationPage(code);
 
-        var card1Balance = dashboardPage.getCardBalance(1);
-        var card2Balance = dashboardPage.getCardBalance(2);
+        var card1InitialBalance = cardBalancePage.getBalance(0);
+        var card2InitialBalance = cardBalancePage.getBalance(1);
 
-        dashboardPage.transferToCard(2, 1, card1Balance);
+        cardBalancePage.replenishment(1).from(0, card1InitialBalance);
 
-        assertEquals(card2Balance + card1Balance, dashboardPage.getCardBalance(2));
-        assertEquals(card1Balance - card1Balance, dashboardPage.getCardBalance(1));
+        var card1FinishBalance = cardBalancePage.getBalance(0);
+        var card2FinishBalance = cardBalancePage.getBalance(1);
+
+        assertEquals(card2InitialBalance + card1InitialBalance, card2FinishBalance);
+        assertEquals(card1InitialBalance - card1InitialBalance, card1FinishBalance);
     }
 
     @Test
@@ -47,17 +50,21 @@ class AuthTest {
         var user = DataGenerator.Registration.getUser();
         var code = DataGenerator.VerificationCode.getVerificationCode();
         LoginPage loginPage = new LoginPage();
-        var dashboardPage =
+
+        var cardBalancePage =
                 loginPage.login(user)
                         .verificationPage(code);
 
-        var card1Balance = dashboardPage.getCardBalance(1);
-        var card2Balance = dashboardPage.getCardBalance(2);
+        var card1InitialBalance = cardBalancePage.getBalance(0);
+        var card2InitialBalance = cardBalancePage.getBalance(1);
 
-        dashboardPage.transferToCard(2, 1, card1Balance);
+        cardBalancePage.replenishment(0).from(1, card1InitialBalance);
 
-        assertEquals(dashboardPage.getCardBalance(2), card2Balance + card1Balance);
-        assertEquals(card1Balance - card1Balance, dashboardPage.getCardBalance(1));
+        var card1FinishBalance = cardBalancePage.getBalance(0);
+        var card2FinishBalance = cardBalancePage.getBalance(1);
+
+        assertEquals(card2InitialBalance + card1InitialBalance, card2FinishBalance);
+        assertEquals(card1InitialBalance - card1InitialBalance, card1FinishBalance);
     }
 
     @Test
@@ -66,16 +73,20 @@ class AuthTest {
         var user = DataGenerator.Registration.getUser();
         var code = DataGenerator.VerificationCode.getVerificationCode();
         LoginPage loginPage = new LoginPage();
-        var dashboardPage =
+
+        var cardBalancePage =
                 loginPage.login(user)
                         .verificationPage(code);
 
-        var card1Balance = dashboardPage.getCardBalance(1);
-        var card2Balance = dashboardPage.getCardBalance(2);
+        var card1InitialBalance = cardBalancePage.getBalance(0);
+        var card2InitialBalance = cardBalancePage.getBalance(1);
 
-        dashboardPage.transferToCard(1, 2, card2Balance + card2Balance);
+        cardBalancePage.replenishment(1).from(0, card1InitialBalance + card1InitialBalance);
 
-        assertEquals(card1Balance, dashboardPage.getCardBalance(1));
-        assertEquals(card2Balance, dashboardPage.getCardBalance(2));
+        var card1FinishBalance = cardBalancePage.getBalance(0);
+        var card2FinishBalance = cardBalancePage.getBalance(1);
+
+        assertEquals(card1InitialBalance, card1FinishBalance);
+        assertEquals(card2InitialBalance, card2FinishBalance);
     }
 }
